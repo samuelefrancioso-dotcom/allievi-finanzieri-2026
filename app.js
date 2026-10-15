@@ -28,6 +28,7 @@ function decode(){
   for(var i=0;i<b.length;i++) u[i]=b.charCodeAt(i)^k.charCodeAt(i%k.length);
   return JSON.parse(new TextDecoder('utf-8').decode(u));
 }
+function lbl(s){return s==='Serie'?'Serie numeriche e alfanumeriche':s}
 function bySubj(s){return Q.filter(function(q){return q.s===s})}
 function prep(q){ // rimescola le risposte
   var idx=[0,1,2,3]; if(!q.fix) idx=shuffle(idx);
@@ -63,7 +64,7 @@ function home(){
   [1,2,3].forEach(function(n){h+='<button class="tile" data-sim="'+n+'" type="button"><b>Simulazione '+n+' del libro</b><span>Le stesse domande del capitolo 15, in ordine e risposte rimescolati</span></button>'});
   h+='</div>';
   h+='<h2>Allenamento per materia</h2><div class="card"><label class="f" for="subj">Materia</label><select id="subj">'+
-    subs.map(function(s){return '<option>'+esc(s)+'</option>'}).join('')+'</select>'+
+    subs.map(function(s){return '<option value="'+esc(s)+'">'+esc(lbl(s))+'</option>'}).join('')+'</select>'+
     '<label class="f">Numero di domande</label><div class="chips" id="num">'+[10,20,30,0].map(function(n,i){return '<button type="button" class="chip'+(i===1?' on':'')+'" data-n="'+n+'">'+(n||'Tutte')+'</button>'}).join('')+'</div>'+
     '<p class="meta" style="margin:10px 0">Vedi subito se la risposta è giusta, con la spiegazione.</p><button class="btn" id="train" type="button">Inizia</button></div>';
   h+='<h2>Ripasso degli errori</h2><div class="card"><p class="meta" style="margin-top:0">'+(errs.length?'Hai <b>'+errs.length+'</b> domande sbagliate da ripassare. Quando rispondi bene, escono dalla lista.':'Nessun errore da ripassare. Le domande che sbagli finiscono qui in automatico.')+'</p><button class="btn red" id="rev" type="button"'+(errs.length?'':' disabled')+'>Ripassa gli errori</button></div>';
@@ -107,7 +108,7 @@ function show(){
   var tm=sim?fmt(Math.round((S.end-Date.now())/1000)):fmt(Math.round((Date.now()-S.t0)/1000));
   var h='<div class="qbar"><div><b>'+esc(S.title)+'</b><div class="meta">Domanda '+(S.i+1)+' di '+tot+' · risposte date: '+answered+'</div></div><div class="timer" id="timer" aria-label="Tempo">'+tm+'</div></div>';
   h+='<div class="prog"><i style="width:'+Math.round(answered/tot*100)+'%"></i></div>';
-  h+='<div class="card"><span class="tag">'+esc(it.q.s)+'</span><div class="qtext">'+stem(it.q.q)+'</div>';
+  h+='<div class="card"><span class="tag">'+esc(lbl(it.q.s))+'</span><div class="qtext">'+stem(it.q.q)+'</div>';
   it.o.forEach(function(o,k){
     var cls='opt';
     if(locked){ if(k===it.c) cls+=' ok'; else if(k===it.a) cls+=' ko'; }
@@ -160,7 +161,7 @@ function finish(timeout){
   h+='<div class="card score"><div class="big">'+ok+'<small> / '+tot+'</small></div><div class="meta">Punteggio in sessantesimi: <b>'+(ok*60/tot).toFixed(2).replace('.',',')+' / 60</b><br>Risposte esatte: '+ok+'<br>Sbagliate: '+S.items.filter(function(x){return x.a>=0&&x.a!==x.c}).length+'<br>Senza risposta: '+S.items.filter(function(x){return x.a<0}).length+'</div></div>';
   h+='<h2>Punteggio per materia</h2><div class="card"><table class="t"><tr><th>Materia</th><th class="n">Esatte</th><th>%</th></tr>';
   ORDER.forEach(function(s){ if(!per[s]) return; var pc=Math.round(per[s].ok/per[s].n*100);
-    h+='<tr><td>'+esc(s)+'</td><td class="n">'+per[s].ok+'/'+per[s].n+'</td><td><div class="bar"><i style="width:'+pc+'%"></i></div></td></tr>'; });
+    h+='<tr><td>'+esc(lbl(s))+'</td><td class="n">'+per[s].ok+'/'+per[s].n+'</td><td><div class="bar"><i style="width:'+pc+'%"></i></div></td></tr>'; });
   h+='</table></div>';
   var wrong=S.items.filter(function(x){return x.a!==x.c});
   h+='<div class="row"><button class="btn" id="again" type="button">Torna al menu</button>'+(wrong.length?'<button class="btn red" id="showw" type="button">Rivedi gli errori ('+wrong.length+')</button>':'')+'</div><div id="revlist"></div>';
@@ -169,7 +170,7 @@ function finish(timeout){
   document.getElementById('again').onclick=home;
   var sw=document.getElementById('showw'); if(sw) sw.onclick=function(){
     document.getElementById('revlist').innerHTML='<h2>Le domande sbagliate o senza risposta</h2><div class="card">'+wrong.map(function(x){
-      return '<div class="rev"><span class="tag">'+esc(x.q.s)+'</span><span class="tag '+(x.a<0?'':'ko')+'">'+(x.a<0?'Senza risposta':'Tua risposta: '+'ABCD'[x.a])+'</span><div class="qtext">'+stem(x.q.q)+'</div>'+
+      return '<div class="rev"><span class="tag">'+esc(lbl(x.q.s))+'</span><span class="tag '+(x.a<0?'':'ko')+'">'+(x.a<0?'Senza risposta':'Tua risposta: '+'ABCD'[x.a])+'</span><div class="qtext">'+stem(x.q.q)+'</div>'+
       x.o.map(function(o,k){return '<div class="opt'+(k===x.c?' ok':(k===x.a?' ko':''))+'"><span class="L">'+'ABCD'[k]+'</span><span>'+esc(o)+'</span></div>'}).join('')+
       '<div class="expl"><b>Perché:</b> '+esc(x.q.e)+'</div></div>';
     }).join('')+'</div>';
